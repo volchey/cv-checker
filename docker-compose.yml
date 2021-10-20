@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  django-app:
+    build: '.'
+    env_file:
+      - 'cv_checker/.env'
+    ports:
+      - '8000:8000'
