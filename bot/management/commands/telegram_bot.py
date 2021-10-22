@@ -1,4 +1,4 @@
-import os
+import environ
 from django.core.management.base import BaseCommand
 from bot.models import Vacancy
 from typing import List, Tuple, cast
@@ -18,9 +18,13 @@ from telegram.ext import (
     CallbackContext,
 )
 
+# Setting Environment Variables
+env = environ.Env()
+environ.Env.read_env()
+
 import logging
 
-CV_CHECKER_BOT_KEY = os.getenv('CV_CHECKER_BOT_KEY')
+CV_CHECKER_BOT_KEY = env.str('CV_CHECKER_BOT_KEY')
 
 NAME, VACANCY, COVER_LETTER, FILE = range(4)
 
