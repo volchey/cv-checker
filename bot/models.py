@@ -15,7 +15,6 @@ class Vacancy(models.Model):
         Closed = 2
 
     status = models.IntegerField(
-        max_length=2,
         choices=Status.choices,
         default=Status.Open,
     )
