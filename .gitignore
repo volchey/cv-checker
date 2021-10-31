@@ -1,7 +1,7 @@
 # Environment
 env/
-cv_checker/.env
-cv_checker/.env-prod
+#cv_checker/.env
+#cv_checker/.env-prod
 
 # Database
 db.sqlite3
