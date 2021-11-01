@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bot',
+    'web.apps.WebConfig',
+    'django_tables2',
 ]
 
 

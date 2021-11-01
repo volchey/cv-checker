@@ -1,0 +1,13 @@
+{% load render_table from django_tables2 %}
+{% load static %}
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'django_tables2/themes/paleblue/css/screen.css' %}" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    </head>
+    <body>
+    <h3>Applicant information</h3>
+        {% render_table  table %}
+    </body>
+</html>
