@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-# Create your models here.
 class Vacancy(models.Model):
     class Meta:
         verbose_name_plural = "vacancies"
@@ -23,3 +22,15 @@ class Vacancy(models.Model):
 
     def __str__(self):
         return self.name
+
+class Candidate(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=32)
+    surname = models.CharField(max_length=32)
+
+class Resume(models.Model):
+    id = models.AutoField(primary_key=True)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='files/')
+    cover_letter = models.TextField(default='')
