@@ -1,4 +1,6 @@
 import environ
+import pdfminer.high_level
+from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile, File
@@ -155,15 +157,16 @@ class Command(BaseCommand):
         cv_path = f'{MEDIA_ROOT}/telegram/{new_file_name}'
         try:
             update.message.document.get_file().download(custom_path=cv_path)
+            self.process_file(cv_path)
             f = open(cv_path, 'rb')
             self.resume.file.save(new_file_name, File(f))
             self.resume.save()
             logger.info(f'File downloaded to {self.resume.file.path}')
+            self.resume.file.close()
+            f.close()
         except Exception:
             return self.handle_error(update, context)
 
-        # self.resume.file.close()
-        # f.close()
 
         update.message.reply_text('Thanks. Your Resume is saved')
         return ConversationHandler.END
@@ -193,3 +196,13 @@ class Command(BaseCommand):
         logger.info("Error ending conversation")
 
         return ConversationHandler.END
+
+    def process_file(self, file_path):
+        full_text = ''
+        for page_layout in pdfminer.high_level.extract_pages(file_path):
+            for element in page_layout:
+                if isinstance(element, LTTextContainer):
+                    full_text += element.get_text()
+
+        self.resume.extracted_text = full_text
+        self.resume.save()

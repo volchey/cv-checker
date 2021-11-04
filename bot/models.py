@@ -34,3 +34,4 @@ class Resume(models.Model):
     vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
     file = models.FileField(upload_to='files/')
     cover_letter = models.TextField(default='')
+    extracted_text = models.TextField(default='')
