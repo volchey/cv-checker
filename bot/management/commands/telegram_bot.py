@@ -1,7 +1,7 @@
 import environ
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
-from django.core.files import File
+from django.core.files.base import ContentFile, File
 from bot.models import Vacancy, Candidate, Resume
 from typing import List, Tuple, cast
 
@@ -151,22 +151,20 @@ class Command(BaseCommand):
         return FILE
 
     def file(self, update, context):
-        cv = update.message.document.get_file()
-        # cv_path = f'{MEDIA_URL}'
-
+        new_file_name = f'{self.candidate.name}_{self.candidate.surname}.pdf'
+        cv_path = f'{MEDIA_ROOT}/telegram/{new_file_name}'
         try:
-            cv_path = cv.download()
-            print(cv_path)
-            f = open(cv_path, 'r')
-            # cv_file = File(cv)
-            self.resume.file = File(f)
+            update.message.document.get_file().download(custom_path=cv_path)
+            f = open(cv_path, 'rb')
+            self.resume.file.save(new_file_name, File(f))
             self.resume.save()
-        except:
+            logger.info(f'File downloaded to {self.resume.file.path}')
+        except Exception:
             return self.handle_error(update, context)
 
-        # logger.info(f'File downloaded to {self.resume.file.path}')
+        # self.resume.file.close()
+        # f.close()
 
-        # resume.download()
         update.message.reply_text('Thanks. Your Resume is saved')
         return ConversationHandler.END
 
