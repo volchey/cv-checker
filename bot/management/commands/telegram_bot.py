@@ -8,7 +8,7 @@ from bot.models import Vacancy, Candidate, Resume
 from typing import List, Tuple, cast
 
 from telegram import (
-    ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, Update
+    ReplyKeyboardRemove, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, Update
 )
 from telegram.ext import (
     Updater,
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 CV_CHECKER_BOT_KEY = env.str('CV_CHECKER_BOT_KEY')
 
-NAME, VACANCY, COVER_LETTER, FILE = range(4)
+NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, FILE = range(5)
 
 class Command(BaseCommand):
 
@@ -51,8 +51,8 @@ class Command(BaseCommand):
             entry_points=[CommandHandler('start', self.start)],
             states={
                 NAME: [MessageHandler(Filters.regex('^(.+) (.+)$'), self.name)],
-                VACANCY: [MessageHandler(Filters.text, self.vacancy),
-                          CallbackQueryHandler(self.list_button)],
+                VACANCY: [CallbackQueryHandler(self.list_button)],
+                VACANCY_DESCRIPTION: [MessageHandler(Filters.text, self.vacancy_description)],
                 COVER_LETTER: [MessageHandler(Filters.text, self.cover_letter)],
                 FILE: [MessageHandler(Filters.document, self.file)],
             },
@@ -101,12 +101,11 @@ class Command(BaseCommand):
             logger.info(f"Candidate created with name {self.candidate.name}, surname {self.candidate.surname}")
             self.candidate.save()
 
+        if not Vacancy.objects.filter(status=Vacancy.Status.Open).exists():
+            update.message.reply_text('Sorry, no opened vacancies found')
+            return ConversationHandler.END
         update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
         return VACANCY
-
-    def vacancy(self, update, context):
-        update.message.reply_text('Ok. Now write some short Cover Letter')
-        return COVER_LETTER
 
     def build_keyboard(self) -> InlineKeyboardMarkup:
         opened_vacancies = Vacancy.objects.filter(status=Vacancy.Status.Open)
@@ -139,8 +138,18 @@ class Command(BaseCommand):
             self.resume.save()
             logger.info(f'Resume created for candidate {self.candidate}, vacancy {vacancy}')
 
-        query.message.reply_text('Ok. Now write some short Cover Letter')
-        return COVER_LETTER
+        query.message.reply_text('Read the vacancy description:\n' + vacancy.description,
+                                 reply_markup=ReplyKeyboardMarkup([['Confirm', 'Choose again']],
+                                 one_time_keybord=True, input_field_placeholder='Confirm?'))
+        return VACANCY_DESCRIPTION
+
+    def vacancy_description(self, update: Update, context: CallbackContext):
+        if update.message.text == 'Confirm':
+            update.message.reply_text('Ok. Now write some short Cover Letter', reply_markup=ReplyKeyboardRemove())
+            return COVER_LETTER
+        else:
+            update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
+            return VACANCY
 
     def cover_letter(self, update, context):
         message_text = update.message.text
@@ -168,7 +177,7 @@ class Command(BaseCommand):
             return self.handle_error(update, context)
 
 
-        update.message.reply_text('Thanks. Your Resume is saved')
+        update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
         return ConversationHandler.END
 
     def cancel(self, update: Update, context: CallbackContext) -> int:
