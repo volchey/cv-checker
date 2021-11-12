@@ -1,12 +1,15 @@
+from django.db import models
+from django.db.models.expressions import Value
 import django_tables2 as tables
-from .models import Applicant
+from bot.models import Candidate, Resume, Vacancy
 
 
-class ApplicantTable(tables.Table):
-    name = tables.Column()
+class CandidateTable(tables.Table):
+    # vacancy = tables.Column(Resume.vacancy)
+    # file = tables.Column()
 
     class Meta:
-        model = Applicant
+        model = Candidate
         template_name = "django_tables2/bootstrap.html"
 
     # def render_pocket_value(self, value):

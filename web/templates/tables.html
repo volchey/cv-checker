@@ -1,13 +1,41 @@
-{% load render_table from django_tables2 %}
 {% load static %}
 <!doctype html>
 <html>
     <head>
-        <link rel="stylesheet" href="{% static 'django_tables2/themes/paleblue/css/screen.css' %}" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     </head>
     <body>
-    <h3>Applicant information</h3>
-        {% render_table  table %}
+    <h3 class="text-center">Applicant information</h3>
+    <form method="get" >
+      <div class="form-group">
+        <select class="form-select" name="vacancy_id">
+          <option value="">All vacancies</option>
+          {% for vacancy in vacancy_open %}
+            <option value="{{ vacancy.id }}">{{ vacancy.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-info">Show</button>
+    </form>
+    <table class="table"> 
+        <tr>
+          <th>Name</th>
+          <th>Surname</th>
+          <th>Vacancy</th>
+          <th>Cover letter</th>
+          <th>File</th>
+        </tr>
+        {% for resume in resumes %}
+        <tr>
+            <td>{{ resume.candidate.name}}</td>
+            <td>{{ resume.candidate.surname}}</td>
+            <td>{{ resume.vacancy.name}}</td>
+            <td>{{ resume.cover_letter}}</td>
+            <td><a href="{{resume.file}}"><button type="button" class="btn btn-info">Open</button></a></td>
+        </tr>
+        {% endfor %}
+      </table>
     </body>
 </html>
