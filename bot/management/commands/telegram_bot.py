@@ -1,5 +1,6 @@
 import environ
 import pdfminer.high_level
+import re
 from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
@@ -97,6 +98,11 @@ class Command(BaseCommand):
             )
             logger.info(f'candiadate already exists id = {existing_candidate.id}')
             self.candidate = existing_candidate
+            existing_resume = Resume.objects.get(candidate=existing_candidate)
+            if existing_resume.file:
+                update.message.reply_text('Resume for this name already existing')
+                return ConversationHandler.END
+
         except Exception:
             logger.info(f"Candidate created with name {self.candidate.name}, surname {self.candidate.surname}")
             self.candidate.save()
@@ -173,7 +179,8 @@ class Command(BaseCommand):
             logger.info(f'File downloaded to {self.resume.file.path}')
             self.resume.file.close()
             f.close()
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             return self.handle_error(update, context)
 
 
@@ -214,4 +221,9 @@ class Command(BaseCommand):
                     full_text += element.get_text()
 
         self.resume.extracted_text = full_text
+        email_regexp = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+        found_email = re.search(email_regexp, full_text)
+        if found_email:
+            self.candidate.email = found_email.group(0)
+            self.candidate.save()
         self.resume.save()

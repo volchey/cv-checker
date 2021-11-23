@@ -27,6 +27,10 @@ class Candidate(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=32)
     surname = models.CharField(max_length=32)
+    email = models.CharField(max_length=64, default='')
+
+    def __str__(self) -> str:
+        return self.name + ' ' + self.surname
 
 class Resume(models.Model):
     id = models.AutoField(primary_key=True)
@@ -35,3 +39,6 @@ class Resume(models.Model):
     file = models.FileField(upload_to='files/')
     cover_letter = models.TextField(default='')
     extracted_text = models.TextField(default='')
+
+    def __str__(self) -> str:
+        return f'Resume from {self.candidate}'
