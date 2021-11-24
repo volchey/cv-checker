@@ -8,8 +8,9 @@ from django.views import debug
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', debug.default_urlconf),
-    path('web/', include('web.urls')),
+    # path('', debug.default_urlconf),
+    path('', include('web.urls')),
+    path('accounts/', include('django.contrib.auth.urls'))
 ]
 
 if settings.DEBUG:

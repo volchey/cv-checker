@@ -15,6 +15,7 @@ SECRET_KEY = env.str('SECRET_KEY')
 DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
+LOGIN_REDIRECT_URL = 'web:all'
 
 
 # Application definition
@@ -125,3 +126,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 import django_heroku
 django_heroku.settings(locals())
+del DATABASES['default']['OPTIONS']['sslmode'] 
