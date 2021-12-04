@@ -1,6 +1,4 @@
-from .models import Applicant
-from bot.models import Vacancy, Candidate, Resume
-from .tables import CandidateTable
+from bot.models import Requirements, Vacancy, Candidate, Resume
 from django.views.generic.base import TemplateView, View
 from web.forms import Registration
 from django.contrib.auth.models import User, AnonymousUser
@@ -10,33 +8,53 @@ from django.contrib.auth.forms import UserCreationForm
 from django.views.generic.edit import FormView
 from django.core.exceptions import ValidationError
 from django.views.generic import CreateView
-from django.http import HttpResponse
-
+from django.core.mail import BadHeaderError, send_mail
+from django.http import HttpResponse, HttpResponseRedirect
 
 class MainView(LoginRequiredMixin, TemplateView):
     template_name = 'tables.html'
 
-    def parse_file(self, resumes):
-        info = []
-        for resume in resumes:
-            list_resume = resume.extracted_text.split('\n')
-            if ('Email' or 'email') in list_resume:
-                position = list_resume.index('Email')
-                info.append({resume.id : list_resume[(position+1):(position+2)]})
-        return info
+    # def parse_file(self, resumes):
+    #     info = []
+    #     for resume in resumes:
+    #         list_resume = resume.extracted_text.split('\n')
+    #         if ('Email' or 'email') in list_resume:
+    #             position = list_resume.index('Email')
+    #             info.append({resume.id : list_resume[(position+1):(position+2)]})
+    #     return info
+
+    def send_decline_email(self, email):
+        subject = 'Thanx for your resume'
+        message = 'Thanx for your resume, but we cant invite you for interview.'
+        from_email = 'anytalala@gmail.com'
+        if subject and message and from_email:
+            try:
+                send_mail(subject, message, from_email, [email],)
+            except BadHeaderError:
+                return HttpResponse('Invalid header found.')
+            return HttpResponse('Email send.')
+        else:
+            # In reality we'd use a form class
+            # to get proper validation errors.
+            return HttpResponse('Make sure all fields are entered and valid.')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         vacancy_id = self.request.GET.get('vacancy_id')
         resumes = Resume.objects.all().select_related('candidate', 'vacancy')
+        requirements = Requirements.objects.all().select_related('candidate')
         if vacancy_id:
             resumes = resumes.filter(vacancy__id=vacancy_id)
         context['resumes'] = resumes
-        file_content = self.parse_file(resumes)
-        context['email'] = file_content
+        # file_content = self.parse_file(resumes)
+        # context['email'] = file_content
         context['resumes'] = resumes
+        context['requirements'] = requirements
         context['vacancy_open'] = Vacancy.objects.filter(status=Vacancy.Status.Open)
+        candidate_id = self.request.GET.get('candidate_id')
+        if candidate_id:
+            self.send_decline_email(resumes)
         return context
 
     def form_valid(self, form):
@@ -47,6 +65,7 @@ class MainView(LoginRequiredMixin, TemplateView):
             object.owner = self.request.user
         object.save()
         return super(CreateView, self).form_valid(form)
+
 
 
 class RegistrationView(FormView):

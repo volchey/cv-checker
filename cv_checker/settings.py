@@ -28,8 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bot',
-    'web.apps.WebConfig',
-    'django_tables2',
+    'web.apps.WebConfig'
 ]
 
 
@@ -126,3 +125,4 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 import django_heroku
 django_heroku.settings(locals())
+del DATABASES['default']['OPTIONS']['sslmode'] 

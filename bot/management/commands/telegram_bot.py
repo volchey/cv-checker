@@ -5,7 +5,7 @@ from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile, File
-from bot.models import Vacancy, Candidate, Resume
+from bot.models import Vacancy, Candidate, Resume, Requirements
 from typing import List, Tuple, cast
 
 from telegram import (
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 CV_CHECKER_BOT_KEY = env.str('CV_CHECKER_BOT_KEY')
 
-NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, FILE = range(5)
+NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, QUESTION1, FILE = range(6)
 
 class Command(BaseCommand):
 
@@ -55,6 +55,7 @@ class Command(BaseCommand):
                 VACANCY: [CallbackQueryHandler(self.list_button)],
                 VACANCY_DESCRIPTION: [MessageHandler(Filters.text, self.vacancy_description)],
                 COVER_LETTER: [MessageHandler(Filters.text, self.cover_letter)],
+                QUESTION1 :  [CallbackQueryHandler(self.question)],
                 FILE: [MessageHandler(Filters.document, self.file)],
             },
             fallbacks=[CommandHandler('cancel', self.cancel)],
@@ -157,6 +158,42 @@ class Command(BaseCommand):
             update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
             return VACANCY
 
+    def question(self, update: Update, context: CallbackContext):
+        # if update.message:
+        query = update.callback_query
+        query.answer()
+
+        value = query.data
+
+        try:
+            existing_req = Requirements.objects.get(
+                candidate=self.candidate, name='English'
+            )
+            requirements = existing_req
+        except Exception:
+            requirements = Requirements()
+            requirements.candidate = self.candidate
+            requirements.name = 'English'
+            requirements.value = value
+            requirements.save()
+            logger.info(f'Requirements created for candidate {self.candidate}, English {value}')
+        
+
+        query.message.reply_text('Send your Resume as pdf file')
+        return FILE
+        # else:
+        #     update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
+        #     return VACANCY
+
+    def question1(self) -> InlineKeyboardMarkup:
+        english_levels = ["A1", "A2","B1", "B2"]
+
+        button_list = [InlineKeyboardButton(
+            level, callback_data=level)
+            for level in english_levels]
+
+        return InlineKeyboardMarkup.from_column(button_list)
+
     def cover_letter(self, update, context):
         message_text = update.message.text
 
@@ -164,8 +201,8 @@ class Command(BaseCommand):
         self.resume.save()
         logger.info("Cover letter saved")
 
-        update.message.reply_text('Send your Resume as pdf file')
-        return FILE
+        update.message.reply_text('Choose level of your English skills', reply_markup=self.question1())
+        return QUESTION1
 
     def file(self, update, context):
         new_file_name = f'{self.candidate.name}_{self.candidate.surname}.pdf'

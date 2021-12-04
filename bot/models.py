@@ -42,3 +42,12 @@ class Resume(models.Model):
 
     def __str__(self) -> str:
         return f'Resume from {self.candidate}'
+
+class Requirements(models.Model):
+    id = models.AutoField(primary_key=True)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    name = models.CharField(max_length=64,default='')
+    value = models.TextField(max_length=64,default='')
+
+    def __str__(self) -> str:
+        return f'{self.name} {self.candidate}'

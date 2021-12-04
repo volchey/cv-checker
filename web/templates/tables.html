@@ -26,8 +26,10 @@
           <th>Surname</th>
           <th>Vacancy</th>
           <th>Cover letter</th>
+          <th>English</th>
           <th>Email</th>
           <th>File</th>
+          <th>Decline</th>
         </tr>
         {% for resume in resumes %}
         <tr>
@@ -35,8 +37,13 @@
             <td>{{ resume.candidate.surname}}</td>
             <td>{{ resume.vacancy.name}}</td>
             <td>{{ resume.cover_letter}}</td>
+            <td>{% for req in requirements%}
+            {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
+            {%endfor%}</td>
             <td>{{ resume.candidate.email }}</td>
-            <td><a href="{{resume.file}}"><button type="button" class="btn btn-info">Open</button></a></td>
+            <td><a href="media/{{resume.file}}"><button type="button" class="btn btn-info">Open</button></a></td>
+            <!-- <td><a href="{{ resume.decline }}"><button type="button" class="btn btn-warning">Open</button></a></td> -->
+            <td><a href= "mailto:{{ resume.candidate.email }}?subject=Thanx for your resume&body=Thanx for your resume, but we cant invite you for interview."><button type="button" class="btn btn-warning">Send Email</button></a></td>
         </tr>
         {% endfor %}
       </table>
