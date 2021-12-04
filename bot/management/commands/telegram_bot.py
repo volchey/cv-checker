@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 CV_CHECKER_BOT_KEY = env.str('CV_CHECKER_BOT_KEY')
 
-NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, QUESTION1, FILE = range(6)
+NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, QUESTION1, QUESTION2, QUESTION3, QUESTION4, QUESTION5, FILE = range(10)
 
 class Command(BaseCommand):
 
@@ -55,7 +55,11 @@ class Command(BaseCommand):
                 VACANCY: [CallbackQueryHandler(self.list_button)],
                 VACANCY_DESCRIPTION: [MessageHandler(Filters.text, self.vacancy_description)],
                 COVER_LETTER: [MessageHandler(Filters.text, self.cover_letter)],
-                QUESTION1 :  [CallbackQueryHandler(self.question)],
+                QUESTION1 :  [CallbackQueryHandler(self.question1)],
+                QUESTION2 :  [CallbackQueryHandler(self.question1)],
+                QUESTION3 :  [CallbackQueryHandler(self.question1)],
+                QUESTION4 :  [CallbackQueryHandler(self.question1)],
+                QUESTION5 :  [MessageHandler(Filters.text, self.skills)],
                 FILE: [MessageHandler(Filters.document, self.file)],
             },
             fallbacks=[CommandHandler('cancel', self.cancel)],
@@ -158,7 +162,7 @@ class Command(BaseCommand):
             update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
             return VACANCY
 
-    def question(self, update: Update, context: CallbackContext):
+    def question1(self, update: Update, context: CallbackContext):
         # if update.message:
         query = update.callback_query
         query.answer()
@@ -167,25 +171,43 @@ class Command(BaseCommand):
 
         try:
             existing_req = Requirements.objects.get(
-                candidate=self.candidate, name='English'
+                candidate=self.candidate, name=context.user_data['question']
             )
             requirements = existing_req
         except Exception:
             requirements = Requirements()
             requirements.candidate = self.candidate
-            requirements.name = 'English'
+            requirements.name = context.user_data['question']
             requirements.value = value
             requirements.save()
-            logger.info(f'Requirements created for candidate {self.candidate}, English {value}')
+            logger.info(f'Requirements created for candidate {self.candidate}, {value}')
         
-
-        query.message.reply_text('Send your Resume as pdf file')
-        return FILE
+        if context.user_data.get('numb_question') == 1:
+            context.user_data['question'] = 'Work experience'
+            context.user_data['numb_question'] = 2
+            query.message.reply_text('Please, choose your work experience.', reply_markup=self.question_experience())
+            return QUESTION2
+        elif context.user_data.get('numb_question') == 2:
+            context.user_data['question'] = 'Type of employment'
+            context.user_data['numb_question'] = 3
+            query.message.reply_text('Please, choose type of employment you prefer.', reply_markup=self.question_time())
+            return QUESTION3
+        elif context.user_data.get('numb_question') == 3:
+            context.user_data['question'] = 'Importance'
+            context.user_data['numb_question'] = 4
+            query.message.reply_text("What's most important to you?", reply_markup=self.question_important())
+            return QUESTION4
+        elif context.user_data.get('numb_question') == 4:
+            context.user_data['question'] = 'Technical skills'
+            context.user_data['numb_question'] = 5
+            query.message.reply_text('Please, write your technical skills.', reply_markup=ReplyKeyboardRemove())
+            return QUESTION5
+        
         # else:
         #     update.message.reply_text('Please choose vacancy:', reply_markup=self.build_keyboard())
         #     return VACANCY
 
-    def question1(self) -> InlineKeyboardMarkup:
+    def question_english(self) -> InlineKeyboardMarkup:
         english_levels = ["A1", "A2","B1", "B2"]
 
         button_list = [InlineKeyboardButton(
@@ -194,15 +216,68 @@ class Command(BaseCommand):
 
         return InlineKeyboardMarkup.from_column(button_list)
 
-    def cover_letter(self, update, context):
+    def question_time(self) -> InlineKeyboardMarkup:
+        work_time = ["full-time", "part time"]
+
+        button_list = [InlineKeyboardButton(
+            level, callback_data=level)
+            for level in work_time]
+
+        return InlineKeyboardMarkup.from_column(button_list)
+
+    def question_experience(self) -> InlineKeyboardMarkup:
+        experience = ["0-1 year", "2-3 years", "3-6 years", "6+years"]
+
+        button_list = [InlineKeyboardButton(
+            level, callback_data=level)
+            for level in experience]
+
+        return InlineKeyboardMarkup.from_column(button_list)
+
+    def question_important(self) -> InlineKeyboardMarkup:
+        important = ["ability to work remotely", "ability to work from office", "ability to relocate from another city"]
+
+        button_list = [InlineKeyboardButton(
+            level, callback_data=level)
+            for level in important]
+
+        return InlineKeyboardMarkup.from_column(button_list)
+
+    def cover_letter(self, update, context:CallbackContext):
         message_text = update.message.text
 
         self.resume.cover_letter = message_text
         self.resume.save()
         logger.info("Cover letter saved")
 
-        update.message.reply_text('Choose level of your English skills', reply_markup=self.question1())
+        context.user_data['numb_question'] = 1
+        context.user_data['question'] = 'English'
+        update.message.reply_text('Please, choose level of your English skills', reply_markup=self.question_english())
         return QUESTION1
+
+    def skills(self, update, context:CallbackContext):
+        message_text = update.message.text
+        logger.info('skills')
+        logger.info(message_text)
+        logger.info(context.user_data['question'])
+        try:
+            existing_req = Requirements.objects.get(
+                candidate=self.candidate, name=context.user_data['question']
+            )
+            logger.info(context.user_data['question'])
+            requirements = existing_req
+        except Exception:
+            requirements = Requirements()
+            requirements.candidate = self.candidate
+            requirements.name = context.user_data['question']
+            requirements.value = message_text
+            requirements.save()
+            logger.info(f'Requirements created for candidate {self.candidate},  {message_text}')
+
+        logger.info("Skills saved")
+
+        update.message.reply_text('Send your Resume as pdf file.')
+        return FILE
 
     def file(self, update, context):
         new_file_name = f'{self.candidate.name}_{self.candidate.surname}.pdf'

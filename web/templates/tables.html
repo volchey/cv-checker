@@ -27,6 +27,10 @@
           <th>Vacancy</th>
           <th>Cover letter</th>
           <th>English</th>
+          <th>Work experience</th>
+          <th>Type of employment</th>
+          <th>Importance</th>
+          <th>Technical skills</th>
           <th>Email</th>
           <th>File</th>
           <th>Decline</th>
@@ -37,8 +41,20 @@
             <td>{{ resume.candidate.surname}}</td>
             <td>{{ resume.vacancy.name}}</td>
             <td>{{ resume.cover_letter}}</td>
-            <td>{% for req in requirements%}
+            <td>{% for req in english%}
             {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
+            {%endfor%}</td>
+            <td>{% for req in work_experience%}
+              {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
+            {%endfor%}</td>
+            <td>{% for req in type_of_employment%}
+                {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
+            {%endfor%}</td>
+            <td>{% for req in importance%}
+                  {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
+            {%endfor%}</td>
+            <td>{% for req in skills%}
+              {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
             {%endfor%}</td>
             <td>{{ resume.candidate.email }}</td>
             <td><a href="media/{{resume.file}}"><button type="button" class="btn btn-info">Open</button></a></td>
