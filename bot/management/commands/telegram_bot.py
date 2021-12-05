@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 CV_CHECKER_BOT_KEY = env.str('CV_CHECKER_BOT_KEY')
 
-NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, QUESTION1, QUESTION2, QUESTION3, QUESTION4, QUESTION5, FILE = range(10)
+NAME, VACANCY, VACANCY_DESCRIPTION, COVER_LETTER, QUESTION1, QUESTION2, QUESTION3, QUESTION4, QUESTION5, EMAIL, FILE = range(11)
 
 class Command(BaseCommand):
 
@@ -60,6 +60,7 @@ class Command(BaseCommand):
                 QUESTION3 :  [CallbackQueryHandler(self.question1)],
                 QUESTION4 :  [CallbackQueryHandler(self.question1)],
                 QUESTION5 :  [MessageHandler(Filters.text, self.skills)],
+                EMAIL :  [MessageHandler(Filters.text, self.email)],
                 FILE: [MessageHandler(Filters.document, self.file)],
             },
             fallbacks=[CommandHandler('cancel', self.cancel)],
@@ -278,13 +279,32 @@ class Command(BaseCommand):
 
         update.message.reply_text('Send your Resume as pdf file.')
         return FILE
+    
+    def email(self, update, context:CallbackContext):
+        message_text = update.message.text
+        logger.info('email')
+        logger.info(message_text)
+        
+        email_regexp = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
+        found_email = re.search(email_regexp, message_text)
+        if found_email:
+            self.candidate.email = found_email.group(0)
+            self.candidate.save()
+        else:
+            update.message.reply_text('Wrong format. Try again.')
+            return EMAIL
+
+        logger.info("Email saved")
+
+        update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
+        return ConversationHandler.END
 
     def file(self, update, context):
         new_file_name = f'{self.candidate.name}_{self.candidate.surname}.pdf'
         cv_path = f'{MEDIA_ROOT}/telegram/{new_file_name}'
         try:
             update.message.document.get_file().download(custom_path=cv_path)
-            self.process_file(cv_path)
+            res = self.process_file(update, cv_path)
             f = open(cv_path, 'rb')
             self.resume.file.save(new_file_name, File(f))
             self.resume.save()
@@ -295,9 +315,12 @@ class Command(BaseCommand):
             logger.error(e)
             return self.handle_error(update, context)
 
-
-        update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
-        return ConversationHandler.END
+        if res:
+            return ConversationHandler.END
+        else:
+            return EMAIL
+        # update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
+        # return ConversationHandler.END
 
     def cancel(self, update: Update, context: CallbackContext) -> int:
         """Cancels and ends the conversation."""
@@ -325,7 +348,7 @@ class Command(BaseCommand):
 
         return ConversationHandler.END
 
-    def process_file(self, file_path):
+    def process_file(self, update, file_path):
         full_text = ''
         for page_layout in pdfminer.high_level.extract_pages(file_path):
             for element in page_layout:
@@ -335,7 +358,13 @@ class Command(BaseCommand):
         self.resume.extracted_text = full_text
         email_regexp = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
         found_email = re.search(email_regexp, full_text)
+        self.resume.save()
         if found_email:
             self.candidate.email = found_email.group(0)
             self.candidate.save()
-        self.resume.save()
+            update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
+            return True
+        else:
+            update.message.reply_text('We cant find your email in resume. Please, write your email here or send /cancel to end a conversation.')
+            return False
+        
