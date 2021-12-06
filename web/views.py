@@ -1,4 +1,4 @@
-from bot.models import Requirements, Vacancy, Candidate, Resume
+from bot.models import Requirements, Vacancy, Candidate, Resume, Skills
 from django.views.generic.base import TemplateView, View
 from web.forms import Registration
 from django.contrib.auth.models import User, AnonymousUser
@@ -48,18 +48,18 @@ class MainView(LoginRequiredMixin, TemplateView):
         work_experience = Requirements.objects.all().filter(name = "Work experience").select_related('candidate')
         importance = Requirements.objects.all().filter(name = "Importance").select_related('candidate')
         skills = Requirements.objects.all().filter(name = "Technical skills").select_related('candidate')
+        required_skills = Skills.objects.all().select_related('candidate', 'skill')
         
         if vacancy_id:
             resumes = resumes.filter(vacancy__id=vacancy_id)
         context['resumes'] = resumes
-        # file_content = self.parse_file(resumes)
-        # context['email'] = file_content
         context['resumes'] = resumes
         context['english'] = english
         context['type_of_employment'] = type_of_employment
         context['work_experience'] = work_experience
         context['importance'] = importance
         context['skills'] = skills
+        context['required_skills'] = required_skills
         context['vacancy_open'] = Vacancy.objects.filter(status=Vacancy.Status.Open)
         candidate_id = self.request.GET.get('candidate_id')
         if candidate_id:

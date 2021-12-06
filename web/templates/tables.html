@@ -31,6 +31,7 @@
           <th>Type of employment</th>
           <th>Importance</th>
           <th>Technical skills</th>
+          <th>Required skills</th>
           <th>Email</th>
           <th>File</th>
           <th>Decline</th>
@@ -56,10 +57,15 @@
             <td>{% for req in skills%}
               {% if req.candidate.name == resume.candidate.name %}{{ req.value }}{%endif%}
             {%endfor%}</td>
+            <td><ul></ul>{% for req in required_skills%}
+              {% if req.candidate.name == resume.candidate.name %}
+                <li {% if req.exist %} style="color:green;" {% else %} style="color:red;"{% endif %}>{{ req.skill.value }}</li>
+              {%endif%}
+            {%endfor%}</ul></td>
             <td>{{ resume.candidate.email }}</td>
-            <td><a href="media/{{resume.file}}"><button type="button" class="btn btn-info">Open</button></a></td>
+            <td><a href="media/{{resume.file}}"><button type="button" class="btn btn-info" {% if not resume.extracted_text%} disabled {%endif%}>Open</button></a></td>
             <!-- <td><a href="{{ resume.decline }}"><button type="button" class="btn btn-warning">Open</button></a></td> -->
-            <td><a href= "mailto:{{ resume.candidate.email }}?subject=Thanx for your resume&body=Thanx for your resume, but we cant invite you for interview."><button type="button" class="btn btn-warning">Send Email</button></a></td>
+            <td><a href= "mailto:{{ resume.candidate.email }}?subject=Thanx for your resume&body=Thanx for your resume, but we cant invite you for interview."><button type="button" class="btn btn-warning" {% if not resume.extracted_text%} disabled {%endif%}>Send Email</button></a></td>
         </tr>
         {% endfor %}
       </table>

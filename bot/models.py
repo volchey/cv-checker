@@ -51,3 +51,20 @@ class Requirements(models.Model):
 
     def __str__(self) -> str:
         return f'{self.name} {self.candidate}'
+
+class Required_skills(models.Model):
+    id = models.AutoField(primary_key=True)
+    vacancy = models.ForeignKey(Vacancy, on_delete=models.CASCADE)
+    value = models.TextField(max_length=64,default='')
+
+    def __str__(self) -> str:
+        return f'{self.value} for {self.vacancy}'
+
+class Skills(models.Model):
+    id = models.AutoField(primary_key=True)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    skill = models.ForeignKey(Required_skills, on_delete=models.CASCADE)
+    exist = models.BooleanField(default=False)
+
+    def __str__(self) -> str:
+        return f'{self.skill} for {self.candidate}'

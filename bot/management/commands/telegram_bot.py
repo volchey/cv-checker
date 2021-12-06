@@ -5,7 +5,7 @@ from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile, File
-from bot.models import Vacancy, Candidate, Resume, Requirements
+from bot.models import Vacancy, Candidate, Resume, Requirements,Skills, Required_skills
 from typing import List, Tuple, cast
 
 from telegram import (
@@ -136,6 +136,7 @@ class Command(BaseCommand):
         vacancy_id = query.data
         try:
             vacancy = Vacancy.objects.get(id=vacancy_id)
+            context.user_data['vacancy'] = vacancy
         except Exception:
             return self.handle_error(update, context)
 
@@ -304,7 +305,7 @@ class Command(BaseCommand):
         cv_path = f'{MEDIA_ROOT}/telegram/{new_file_name}'
         try:
             update.message.document.get_file().download(custom_path=cv_path)
-            res = self.process_file(update, cv_path)
+            res = self.process_file(update,context, cv_path)
             f = open(cv_path, 'rb')
             self.resume.file.save(new_file_name, File(f))
             self.resume.save()
@@ -346,7 +347,7 @@ class Command(BaseCommand):
 
         return ConversationHandler.END
 
-    def process_file(self, update, file_path):
+    def process_file(self, update, context, file_path):
         full_text = ''
         for page_layout in pdfminer.high_level.extract_pages(file_path):
             for element in page_layout:
@@ -356,6 +357,22 @@ class Command(BaseCommand):
         self.resume.extracted_text = full_text
         email_regexp = r"(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
         found_email = re.search(email_regexp, full_text)
+
+        found_name = full_text.find(self.candidate.name)
+        found_surname = full_text.find(self.candidate.name)
+        if found_name < 0 and found_surname < 0:
+            update.message.reply_text('Looks like that sended resume is not yours. Name and surname does not match what is entered here.')
+            return False
+        skills = Required_skills.objects.filter(vacancy=context.user_data['vacancy'])
+        for skill in skills: 
+            found_skill = full_text.find(skill.value)
+            skill_base = Skills()
+            skill_base.candidate = self.candidate
+            skill_base.skill = skill
+            if found_skill > 0:
+                skill_base.exist = True
+            skill_base.save()
+        
         self.resume.save()
         if found_email:
             self.candidate.email = found_email.group(0)
