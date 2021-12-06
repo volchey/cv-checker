@@ -319,8 +319,6 @@ class Command(BaseCommand):
             return ConversationHandler.END
         else:
             return EMAIL
-        # update.message.reply_text('Thanks. Your Resume is saved. We will contact you after check')
-        # return ConversationHandler.END
 
     def cancel(self, update: Update, context: CallbackContext) -> int:
         """Cancels and ends the conversation."""
