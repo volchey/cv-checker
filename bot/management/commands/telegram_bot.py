@@ -182,7 +182,7 @@ class Command(BaseCommand):
             requirements.name = context.user_data['question']
             requirements.value = value
             requirements.save()
-            logger.info(f'Requirements created for candidate {self.candidate}, {value}')
+            logger.info(f'Additional_info created for candidate {self.candidate}, {value}')
         
         if context.user_data.get('numb_question') == 1:
             context.user_data['question'] = 'Work experience'
@@ -263,7 +263,7 @@ class Command(BaseCommand):
         logger.info(message_text)
         logger.info(context.user_data['question'])
         try:
-            existing_req = Requirements.objects.get(
+            existing_req = Additional_info.objects.get(
                 candidate=self.candidate, name=context.user_data['question']
             )
             logger.info(context.user_data['question'])
@@ -274,7 +274,7 @@ class Command(BaseCommand):
             requirements.name = context.user_data['question']
             requirements.value = message_text
             requirements.save()
-            logger.info(f'Requirements created for candidate {self.candidate},  {message_text}')
+            logger.info(f'Additional_info created for candidate {self.candidate},  {message_text}')
 
         logger.info("Skills saved")
 

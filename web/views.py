@@ -1,4 +1,4 @@
-from bot.models import Requirements, Vacancy, Candidate, Resume, Skills
+from bot.models import Additional_info, Vacancy, Candidate, Resume, Skills
 from django.views.generic.base import TemplateView, View
 from web.forms import Registration
 from django.contrib.auth.models import User, AnonymousUser
@@ -43,11 +43,11 @@ class MainView(LoginRequiredMixin, TemplateView):
 
         vacancy_id = self.request.GET.get('vacancy_id')
         resumes = Resume.objects.all().select_related('candidate', 'vacancy')
-        english = Requirements.objects.all().filter(name = "English").select_related('candidate')
-        type_of_employment = Requirements.objects.all().filter(name = "Type of employment").select_related('candidate')
-        work_experience = Requirements.objects.all().filter(name = "Work experience").select_related('candidate')
-        importance = Requirements.objects.all().filter(name = "Importance").select_related('candidate')
-        skills = Requirements.objects.all().filter(name = "Technical skills").select_related('candidate')
+        english = Additional_info.objects.all().filter(name = "English").select_related('candidate')
+        type_of_employment = Additional_info.objects.all().filter(name = "Type of employment").select_related('candidate')
+        work_experience = Additional_info.objects.all().filter(name = "Work experience").select_related('candidate')
+        importance = Additional_info.objects.all().filter(name = "Importance").select_related('candidate')
+        skills = Additional_info.objects.all().filter(name = "Technical skills").select_related('candidate')
         required_skills = Skills.objects.all().select_related('candidate', 'skill')
         
         if vacancy_id:
