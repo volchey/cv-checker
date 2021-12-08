@@ -5,7 +5,7 @@ from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile, File
-from bot.models import Vacancy, Candidate, Resume, Requirements,Skills, Required_skills
+from bot.models import Vacancy, Candidate, Resume, Additional_info,Skills, Required_skills
 from typing import List, Tuple, cast
 
 from telegram import (
