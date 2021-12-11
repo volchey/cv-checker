@@ -5,7 +5,7 @@ from pdfminer.layout import LTTextContainer
 from cv_checker.settings import MEDIA_ROOT, MEDIA_URL
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile, File
-from bot.models import Vacancy, Candidate, Resume, Additional_info,Skills, Required_skills
+from bot.models import Vacancy, Candidate, Resume, Requirements,Skills, Required_skills
 from typing import List, Tuple, cast
 
 from telegram import (
@@ -202,7 +202,7 @@ class Command(BaseCommand):
         elif context.user_data.get('numb_question') == 4:
             context.user_data['question'] = 'Technical skills'
             context.user_data['numb_question'] = 5
-            query.message.reply_text('Please, write your technical skills.', reply_markup=ReplyKeyboardRemove())
+            query.message.reply_text('Why do you want to work here?', reply_markup=ReplyKeyboardRemove())
             return QUESTION5
         
         # else:

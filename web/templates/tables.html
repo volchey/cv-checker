@@ -3,7 +3,7 @@
 {% block content %}
     <body>
       {% if user.is_authenticated %}
-            <a href="{% url 'logout' %}?next={% url 'web:all' %}"><button type="button" class="btn btn-info">Logout</button></a>
+            <a href="{% url 'logout' %}?next={% url 'web:all' %}"><button type="button" class="btn btn-info" style="float:right;">Logout</button></a>
         {% else %}
             <a href="{% url 'login' %}?next={% url 'web:all' %}"><button type="button" class="btn btn-info">Login</button></a> or
             <a href="{% url 'web:registration' %}?next={% url 'web:all' %}"><button type="button" class="btn btn-info">Registration</button></a>
@@ -17,8 +17,9 @@
             <option value="{{ vacancy.id }}">{{ vacancy.name }}</option>
           {% endfor %}
         </select>
+        <button type="submit" class="btn btn-info">Show</button>
       </div>
-      <button type="submit" class="btn btn-info">Show</button>
+      
     </form>
     <table class="table"> 
         <tr>

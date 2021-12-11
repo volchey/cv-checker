@@ -4,11 +4,10 @@
 <body style="background-image: url({% static 'background.png' %});background-size: cover;  background-repeat: no-repeat;background-attachment: fixed;">
 <!-- <p> -->
 {% if user.is_authenticated %}
-<p>Authenticated as : {{ user.get_full_name }}
-</p>
-<p>You can <a href="/accounts/logout">Logout</a></p>
+
+<a href="/accounts/logout"><button type="button" class="btn btn-warning" style="float:right;">Logout</button></a>
 {% else %}
-<a href="/accounts/login"><button id="login" type="button" class="btn btn-warning btn-lg" style="position:relative; top: 20%;left: 80%;">Press here</button></a>
+<a href="/accounts/login"><button id="login" type="button" class="btn btn-warning btn-lg" style="position: absolute;top: 50%;left: 70%;">Press here</button></a>
 {% endif %}
 {% if islocal %}
 Some of the samples will require a user login to be created.
