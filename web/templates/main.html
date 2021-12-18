@@ -5,7 +5,7 @@
 <!-- <p> -->
 {% if user.is_authenticated %}
 
-<a href="/accounts/logout"><button type="button" class="btn btn-warning" style="float:right;">Logout</button></a>
+<a href="/accounts/logout"><button type="button" class="btn btn-warning btn-lg" style="position: absolute;top: 50%;left: 70%;">Logout</button></a>
 {% else %}
 <a href="/accounts/login"><button id="login" type="button" class="btn btn-warning btn-lg" style="position: absolute;top: 50%;left: 70%;">Press here</button></a>
 {% endif %}
